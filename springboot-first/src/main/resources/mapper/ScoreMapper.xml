@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.Mapper.ScoreMapper">
+
+
+    <!--  结果映射、定义查询结果和返回类型之间的关系  id表示唯一标识  property标识类中的名称  column表示查询语句中的名称-->
+
+    <resultMap id="mapChoiceLession" type="com.example.demo.entity.Score">
+        <result property="sid" column="id" ></result>
+        <result property="cid" column="cid" ></result>
+        <result property="es" column="es" ></result>
+        <result property="us" column="us" ></result>
+        <result property="allScore" column="allscore" ></result>
+        <association property="student" javaType="com.example.demo.entity.Student">
+            <id property="sid" column="sid"></id>
+            <result property="sname" column="sname"></result>
+            <result property="sex" column="sex"></result>
+        </association>
+        <association property="course" javaType="com.example.demo.entity.Course">
+            <id property="cid" column="cid"></id>
+            <result property="cname" column="cname"></result>
+            <result property="score" column="sc"></result>
+            <result property="time" column="ctime"></result>
+            <result property="classtime" column="classtime"></result>
+            <result property="address" column="address"></result>
+            <result property="examtime" column="examtime"></result>
+        </association>
+        <association property="teacher" javaType="com.example.demo.entity.Teacher">
+            <id property="tid" column="tid"></id>
+            <result property="tname" column="tname"></result>
+        </association>
+    </resultMap>
+    <select id="selectChoiceLession" resultMap="mapChoiceLession" >
+        SELECT score.`sid` id,sname,score.`cid` cid,teacher.`tname` tname,cname,course.`score` sc ,
+        score.`es` es ,score.`us` us,score.`all_score` allscore FROM score,student,course,teacher
+         WHERE student.`sid` = score.`sid` AND course.`cid` = score.`cid` AND teacher.`tid`=course.`teacher_id`
+        <if test="sid != null and sid != ''">
+            and student.`sid` like concat('%', #{sid}, '%')
+        </if>
+       <if test="cname != null and cname != ''">
+            and course.`cname` like concat('%', #{cname}, '%')
+        </if>
+        <if test="tname != null and tname != ''">
+            and teacher.`tname` like concat('%', #{tname}, '%')
+        </if>
+        <if test="sname != null and sname != ''">
+            and student.`sname` like concat('%', #{sname}, '%')
+        </if>
+    </select>
+
+    <delete id="delete" >
+        DELETE  FROM score WHERE cid = #{cid} AND sid = #{sid}
+    </delete>
+
+    <delete id="updateScore" >
+        UPDATE score  SET  us= #{us}, es= #{es}, all_score=#{allscore}  WHERE sid = #{sid} AND cid = #{cid}
+    </delete>
+
+    <select id="selectGrades" resultMap="mapChoiceLession" >
+        SELECT course.`cname` cname ,course.`cid` cid,course.`time` ctime,course.`score` sc,course.`classtime` classtime,course.`address` address,course.`examtime` examtime,
+        teacher.`tname` tname,score.`us` us,score.`es` es,score.`all_score` allscore,student.`sname` sname,student.`sid` sid,student.`sex` sex
+        FROM course
+        LEFT OUTER JOIN teacher ON (teacher.`tid`=course.`teacher_id`)
+        LEFT OUTER JOIN score ON (course.`cid` = score.`cid`)
+        LEFT OUTER JOIN student ON (score.`sid` = student.`sid`)
+        WHERE student.`sname` IS NOT NULL
+        <if test="cid != null and cid != ''">
+            and course.`cid` like concat('%', #{cid}, '%')
+        </if>
+        <if test="cname != null and cname != ''">
+            and course.`cname` like concat('%', #{cname}, '%')
+        </if>
+        <if test="tname != null and tname != ''">
+            and teacher.`tname` like concat('%', #{tname}, '%')
+        </if>
+        <if test="grades != null and grades != '' and grades != -1">
+            and score.`all_score` >= #{grades}
+        </if>
+        <if test="grades != null and grades != '' and grades == -1">
+            and score.`all_score` &lt; 60
+        </if>
+    </select>
+</mapper>
